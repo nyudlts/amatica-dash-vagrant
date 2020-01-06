@@ -2,7 +2,11 @@
 
 yum update -y
 
-semanage port -a -t http_port_t -p tcp 81
+semanage port -a -t http_port_t -p tcp 80
+semanage port -a -t http_port_t -p tcp 3306
+semanage port -a -t http_port_t -p tcp 4730
+semanage port -a -t http_port_t -p tcp 9200
+
 setsebool -P httpd_can_network_connect_db=1
 setsebool -P httpd_can_network_connect=1
 setsebool -P httpd_setrlimit 1
@@ -42,6 +46,8 @@ EOF'
 
 yum install -y java-1.8.0-openjdk-headless elasticsearch mariadb-server gearmand python-pip
 
+echo "network.host: 0.0.0.0" >> /etc/elasticsearch/elasticsearch.yml
+
 systemctl enable elasticsearch && systemctl start elasticsearch
 
 systemctl enable mariadb && systemctl start mariadb
@@ -66,5 +72,9 @@ cd /usr/share/archivematica/dashboard
 systemctl enable archivematica-mcp-server && systemctl start archivematica-mcp-server
 
 systemctl enable archivematica-dashboard && systemctl start archivematica-dashboard
+
+sed -i -e 's/listen 81 default_server/listen 80 default_server/' /etc/nginx/conf.d/archivematica-dashboard.conf
+
+mv /tmp/nginx.conf /etc/nginx/nginx.conf
 
 systemctl enable nginx && systemctl start nginx
